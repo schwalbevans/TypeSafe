@@ -63,6 +63,9 @@ class MainWindow(QMainWindow):
         
         splitter.setSizes([150, 750])
 
+        # Automatically start the proxy on launch
+        self.start_proxy()
+
     def start_proxy(self):
         if self.proxy_thread is None:
             port = 8080  # You can make this configurable later
