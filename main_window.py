@@ -33,8 +33,7 @@ class MainWindow(QMainWindow):
 
         # --- Left Panel (AI Services List) ---
         self.ai_service_list = QListWidget()
-        self.ai_service_list.addItem("ChatGPT")
-        self.ai_service_list.addItem("Gemini")
+        self.ai_service_list.addItem("ChatGPT") 
         self.ai_service_list.setMaximumWidth(200)
         splitter.addWidget(self.ai_service_list)
         self.ai_service_list.itemClicked.connect(self.on_service_selected)
@@ -45,17 +44,7 @@ class MainWindow(QMainWindow):
         main_content_area.setLayout(layout)
         splitter.addWidget(main_content_area)
 
-        # Buttons
-        button_layout = QHBoxLayout()
-        self.start_button = QPushButton("Start Proxy")
-        self.start_button.clicked.connect(self.start_proxy)
-        self.stop_button = QPushButton("Stop Proxy")
-        self.stop_button.clicked.connect(self.stop_proxy)
-        self.stop_button.setEnabled(False)
-        button_layout.addWidget(self.start_button)
-        button_layout.addWidget(self.stop_button)
-        layout.addLayout(button_layout)
-
+    
         # Log display
         self.log_display = QTextEdit()
         self.log_display.setReadOnly(True)
@@ -64,7 +53,7 @@ class MainWindow(QMainWindow):
         splitter.setSizes([150, 750])
 
         # Automatically start the proxy on launch
-        self.start_proxy()
+        
 
     def start_proxy(self):
         if self.proxy_thread is None:
@@ -73,9 +62,9 @@ class MainWindow(QMainWindow):
             self.proxy_thread.log_message.connect(self.log_to_display)
             self.proxy_thread.start()
             
-            self.start_button.setEnabled(False)
-            self.stop_button.setEnabled(True)
-            self.ai_service_list.setEnabled(False)
+           # self.start_button.setEnabled(False)
+           # self.stop_button.setEnabled(True)
+            #self.ai_service_list.setEnabled(False)
 
     def stop_proxy(self):
         if self.proxy_thread:
