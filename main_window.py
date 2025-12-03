@@ -1,55 +1,71 @@
 import sys
+import os
 import json
-import requests
-from PyQt6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QWidget,
-    QSplitter,
-    QInputDialog,
-    QVBoxLayout,
-    QTextEdit,
-    QPushButton,
-    QHBoxLayout,
-    QLineEdit,
-)
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebChannel import QWebChannel
+from PyQt6.QtCore import QObject, pyqtSlot, QUrl, pyqtSignal
 
+# --- THE BRIDGE ---
+# This class handles communication between JavaScript and Python
+class Bridge(QObject):
+    # Signal to send data FROM Python TO JavaScript
+    sendToJs = pyqtSignal(str)
 
+    @pyqtSlot(str)
+    def receiveFromJs(self, message_json):
+        """
+        Triggered when JavaScript calls backend.receiveFromJs()
+        """
+        data = json.loads(message_json)
+        user_text = data.get("text", "")
+        print(f"Python received: {user_text}")
 
-class MainWindow(QMainWindow):
+        # --- YOUR LOGIC GOES HERE ---
+        # 1. Run PII Checks
+        # 2. Call OpenAI (if safe)
+        # 3. Send response back to UI
+        
+        # For this skeleton, we just echo it back after a delay
+        response = {
+            "role": "assistant", 
+            "content": f"I received your message: '{user_text}'. <br><b>Python Logic is working!</b>"
+        }
+        self.sendToJs.emit(json.dumps(response))
+
+# --- MAIN WINDOW ---
+class AirlockWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Airlock AI")
-        self.setGeometry(100, 100, 900, 700)
+        self.setWindowTitle("Airlock - Secure Chat")
+        self.resize(1000, 800)
+
+        # 1. Setup Web Engine
+        self.browser = QWebEngineView()
         
-        self.proxy_thread = None
-        self.api_key = None
-        self.upstream_host = "https://api.openai.com" # Default
-        self.regex_pattern = ""
-        self.conversation_history = []
+        # 2. Setup Web Channel (The Bridge)
+        self.channel = QWebChannel()
+        self.bridge = Bridge()
+        self.channel.registerObject('backend', self.bridge)
+        self.browser.page().setWebChannel(self.channel)
 
-        # --- Main Layout ---
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.setCentralWidget(splitter)
+        # 3. Load HTML File
+        # We need the absolute path to index.html for PyQt to load it correctly
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        html_path = os.path.join(current_dir, "index.html")
+        self.browser.setUrl(QUrl.fromLocalFile(html_path))
 
-        # --- Left Panel (AI Services List) ---
-        self.ai_service_list = QListWidget()
-        self.ai_service_list.addItem("ChatGPT") 
-        self.ai_service_list.setMaximumWidth(200)
-        splitter.addWidget(self.ai_service_list)
-        self.ai_service_list.itemClicked.connect(self.on_service_selected)
-
+        # 4. Layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.browser)
+        layout.setContentsMargins(0, 0, 0, 0) # No borders, full screen web view
         
-        splitter.setSizes([150, 750])
-
- 
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = AirlockWindow()
     window.show()
     sys.exit(app.exec())
