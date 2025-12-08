@@ -23,6 +23,7 @@ class Bridge(QObject):
 
         # --- YOUR LOGIC GOES HERE ---
         # 1. Run PII Checks
+        
         # 2. Call OpenAI (if safe)
         # 3. Send response back to UI
         
