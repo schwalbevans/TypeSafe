@@ -1,10 +1,11 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QDockWidget, QWidget, QVBoxLayout, QPushButton
 from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtCore import QUrl, QObject, pyqtSlot, QFile, QIODevice
+from PyQt6.QtCore import QUrl, QObject, pyqtSlot, QFile, QIODevice, Qt
+
 
 # --- THE BRIDGE (Python <-> JS) ---
 class SecurityBridge(QObject):
@@ -28,6 +29,23 @@ class AirlockApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Airlock AI Wrapper")
         self.resize(1200, 800)
+        
+        self.sidebar_dock = QDockWidget("Select your AI", self)
+        self.sidebar_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.sidebar_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+
+        # Create a widget to hold the content of the sidebar
+        sidebar_content_widget = QWidget()
+        sidebar_layout = QVBoxLayout(sidebar_content_widget)
+        sidebar_layout.addWidget(QPushButton("Button 1"))
+        sidebar_layout.addWidget(QPushButton("Button 2"))
+        sidebar_layout.addStretch() # Adds flexible space to push content to the top
+
+        # Set the content widget to the QDockWidget
+        self.sidebar_dock.setWidget(sidebar_content_widget)
+
+        # Add the QDockWidget to the left dock area of the QMainWindow
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.sidebar_dock)
 
         # 1. SETUP PERSISTENT PROFILE (Keeps you logged in)
         # Creates a folder 'airlock_cache' next to this script
@@ -56,8 +74,9 @@ class AirlockApp(QMainWindow):
         # 4. INJECT SCRIPTS
         self.browser.loadFinished.connect(self.inject_security_layer)
 
+
         # 5. LOAD URL
-        print("[PYTHON] Loading ChatGPT...")
+        print("[PYTHON] Loading ChatGPT...")  
         self.browser.setUrl(QUrl("https://chatgpt.com"))
 
     def inject_security_layer(self):
