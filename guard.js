@@ -39,6 +39,7 @@ function attachLock(element) {
     
     element.addEventListener('keydown', (e) => {
         // If Enter is pressed (without Shift)
+        // TODO: Add in ability to check if the user sends message by clicking send button and not just enter 
         if (e.key === 'Enter' && !e.shiftKey) {
             
             // A. STOP the send immediately
@@ -51,7 +52,7 @@ function attachLock(element) {
             
             // C. Send to Python
             if (window.pyBridge) {
-                window.pyBridge.check_text(text);
+                window.pyBridge.check_text(text); // TODO: Stops message from sending wether or not it's malicious
             }
         }
     }, true); // Use Capture Phase

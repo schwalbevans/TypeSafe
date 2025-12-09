@@ -74,6 +74,7 @@ class AirlockApp(QMainWindow):
         # 4. INJECT SCRIPTS
         self.browser.loadFinished.connect(self.inject_security_layer)
 
+        # TODO: Add in option to select chatgpt or Gemini 
 
         # 5. LOAD URL
         print("[PYTHON] Loading ChatGPT...")  
