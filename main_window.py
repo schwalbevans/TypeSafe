@@ -37,8 +37,14 @@ class AirlockApp(QMainWindow):
         # Create a widget to hold the content of the sidebar
         sidebar_content_widget = QWidget()
         sidebar_layout = QVBoxLayout(sidebar_content_widget)
-        sidebar_layout.addWidget(QPushButton("Button 1"))
-        sidebar_layout.addWidget(QPushButton("Button 2"))
+        self.GeminiButton = QPushButton("Gemini")
+        self.GeminiButton.setCheckable(True) 
+        self.GeminiButton.setChecked(False)
+        sidebar_layout.addWidget(self.GeminiButton)
+        self.ChatGPTButton = QPushButton("ChatGPT")
+        self.ChatGPTButton.setCheckable(True) 
+        self.ChatGPTButton.setChecked(False)
+        sidebar_layout.addWidget(self.ChatGPTButton)
         sidebar_layout.addStretch() # Adds flexible space to push content to the top
 
         # Set the content widget to the QDockWidget
@@ -76,9 +82,12 @@ class AirlockApp(QMainWindow):
 
         # TODO: Add in option to select chatgpt or Gemini 
 
+       
+        print("[PYTHON] Loading Gemini")  
+        self.browser.setUrl(QUrl("https://gemini.google.com"))
         # 5. LOAD URL
-        print("[PYTHON] Loading ChatGPT...")  
-        self.browser.setUrl(QUrl("https://chatgpt.com"))
+        #print("[PYTHON] Loading ChatGPT...")  
+        #self.browser.setUrl(QUrl("https://chatgpt.com"))
 
     def inject_security_layer(self):
         print("[PYTHON] Page Loaded. Injecting Security Scripts...")
