@@ -1,7 +1,7 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDockWidget, QWidget, QVBoxLayout, QPushButton
-from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
+from PyQt6.QtWidgets import QApplication, QMainWindow, QDockWidget, QWidget, QVBoxLayout, QPushButton, QButtonGroup
+from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngineScript
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, QFile, QIODevice, Qt
@@ -37,15 +37,25 @@ class AirlockApp(QMainWindow):
         # Create a widget to hold the content of the sidebar
         sidebar_content_widget = QWidget()
         sidebar_layout = QVBoxLayout(sidebar_content_widget)
+        self.groupOfButtons = QButtonGroup()
         self.GeminiButton = QPushButton("Gemini")
         self.GeminiButton.setCheckable(True) 
         self.GeminiButton.setChecked(False)
+        self.groupOfButtons.addButton(self.GeminiButton)
         sidebar_layout.addWidget(self.GeminiButton)
+
         self.ChatGPTButton = QPushButton("ChatGPT")
         self.ChatGPTButton.setCheckable(True) 
         self.ChatGPTButton.setChecked(False)
+        self.groupOfButtons.addButton(self.ChatGPTButton)
         sidebar_layout.addWidget(self.ChatGPTButton)
+
+        # Connect buttons to the handler
+        self.GeminiButton.clicked.connect(self.handle_button_click)
+        self.ChatGPTButton.clicked.connect(self.handle_button_click)
+
         sidebar_layout.addStretch() # Adds flexible space to push content to the top
+
 
         # Set the content widget to the QDockWidget
         self.sidebar_dock.setWidget(sidebar_content_widget)
@@ -58,12 +68,13 @@ class AirlockApp(QMainWindow):
         base_path = os.path.dirname(os.path.abspath(__file__))
         storage_path = os.path.join(base_path, "airlock_cache")
         
-        self.profile = QWebEngineProfile("AirlockProfile", self)
+        self.profile = QWebEngineProfile("AirlockProfile")
         self.profile.setPersistentStoragePath(storage_path)
         self.profile.setPersistentCookiesPolicy(QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies)
         
         # Spoof Chrome to avoid being blocked
-        self.profile.setHttpUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        # We use a Linux User-Agent to match your actual OS. This prevents "Platform Mismatch" detection.
+        self.profile.setHttpUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
 
         # 2. SETUP BROWSER
         self.browser = QWebEngineView()
@@ -82,9 +93,12 @@ class AirlockApp(QMainWindow):
 
         # TODO: Add in option to select chatgpt or Gemini 
 
-       
-        print("[PYTHON] Loading Gemini")  
-        self.browser.setUrl(QUrl("https://gemini.google.com"))
+    def handle_button_click(self):
+        if self.ChatGPTButton.isChecked():
+            self.browser.setUrl(QUrl("https://chatgpt.com"))
+        elif self.GeminiButton.isChecked():
+            self.browser.setUrl(QUrl("https://gemini.google.com"))
+        
         # 5. LOAD URL
         #print("[PYTHON] Loading ChatGPT...")  
         #self.browser.setUrl(QUrl("https://chatgpt.com"))
@@ -111,6 +125,9 @@ class AirlockApp(QMainWindow):
             print(f"[PYTHON] ❌ Error: guard.js not found at {guard_path}")
 
 if __name__ == "__main__":
+    # Set Chromium flags to hide automation status and avoid detection
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-blink-features=AutomationControlled"
+
     app = QApplication(sys.argv)
     window = AirlockApp()
     window.show()
