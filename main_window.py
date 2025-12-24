@@ -1,17 +1,16 @@
 import sys
 import os
 import threading
-import webview # pip install pywebview
-from flask import Flask, jsonify, request # pip install flask
+import webbrowser
+import subprocess
+import shutil
+from flask import Flask, jsonify, request, redirect # pip install flask
+from pynput import keyboard # pip install pynput
 
-# --- 0. LINUX CLEANUP ---
-if sys.platform.startswith("linux"):
-    if "LD_LIBRARY_PATH" in os.environ: del os.environ["LD_LIBRARY_PATH"]
-    if "GTK_PATH" in os.environ: del os.environ["GTK_PATH"]
-    os.environ["GDK_BACKEND"] = "x11"
 
 # --- 1. THE INTERNAL SERVER (Backend) ---
 server = Flask(__name__)
+global_window = None
 
 
 # A. serve the Launcher HTML securely
@@ -22,16 +21,22 @@ def home():
     <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5;">
         <h1>Airlock Secure Workspace</h1>
         <p>Select your secure environment:</p>
-        <a href="https://gemini.google.com" 
-           style="display:inline-block; padding:15px 30px; margin:10px; background:#4285F4; color:white; border-radius:6px; font-size:16px; text-decoration:none;">
+        <button onclick="window.location.href='https://gemini.google.com'" 
+           style="display:inline-block; padding:15px 30px; margin:10px; background:#4285F4; color:white; border-radius:6px; font-size:16px; border:none; cursor:pointer;">
             Launch Google Gemini
-        </a>
-        <a href="https://chatgpt.com" 
-           style="display:inline-block; padding:15px 30px; margin:10px; background:#10a37f; color:white; border-radius:6px; font-size:16px; text-decoration:none;">
+        </button>
+        <button onclick="window.location.href='https://chatgpt.com'" 
+           style="display:inline-block; padding:15px 30px; margin:10px; background:#10a37f; color:white; border-radius:6px; font-size:16px; border:none; cursor:pointer;">
             Launch OpenAI ChatGPT
-        </a>
+        </button>
     </body>
     """
+
+# C. Handle Navigation (Bypassing JS Bridge)
+@server.route('/navigate')
+def navigate():
+    url = request.args.get('url')
+    return redirect(url)
 
 # B. Handle Security Checks (The "Bridge")
 @server.route('/scan', methods=['POST'])
@@ -51,65 +56,60 @@ def start_server():
     # Run quietly in background
     server.run(port=5000, use_reloader=False)
 
-# --- 2. THE GUARD SCRIPT (Frontend) ---
-GUARD_JS = """
-console.log("🛡️ Airlock Active");
+# --- 2. PYTHON KEYBOARD MONITOR (No JS Injection) ---
+keystroke_buffer = []
+is_window_focused = True
 
-// Inject "Back to Home" Button
-var homeBtn = document.createElement("button");
-homeBtn.innerHTML = "🏠 Home";
-homeBtn.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:2147483647; padding:10px 20px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer; font-family:sans-serif; font-size:14px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);";
-homeBtn.onclick = function() { window.location.href = 'http://127.0.0.1:5000'; };
-document.body.appendChild(homeBtn);
+def on_focus():
+    global is_window_focused
+    is_window_focused = True
 
-document.addEventListener('keydown', function(e) {
-    let target = e.target;
-    // Detect typing in input fields
-    if ((target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) && e.key === 'Enter' && !e.shiftKey) {
-        let text = target.value || target.innerText;
-        
-        // Send HTTP Request to our local Flask server
-        fetch('http://127.0.0.1:5000/scan', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({text: text})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'blocked') {
-                e.preventDefault();
-                e.stopPropagation();
-                alert("🛑 BLOCKED BY AIRLOCK:\\n" + data.reason);
-            }
-        });
-    }
-}, true);
-"""
+def on_blur():
+    global is_window_focused
+    is_window_focused = False
 
-# --- 3. EVENT LISTENER ---
-def on_page_loaded(window):
-    # Only inject security when we are NOT on the launcher
-    url = window.get_current_url()
-    if "127.0.0.1" not in url:
-        # We are on Google/ChatGPT -> Inject Guard
-        window.evaluate_js(GUARD_JS)
+def on_press(key):
+    global keystroke_buffer, is_window_focused
+    if not is_window_focused: return
+    try:
+        # Add character to buffer
+        if hasattr(key, 'char') and key.char:
+            keystroke_buffer.append(key.char)
+    except AttributeError:
+        pass
+
+    # Check buffer for keywords
+    current_text = "".join(keystroke_buffer[-20:]) # Keep last 20 chars
+    if "confidential" in current_text.lower():
+        print("\n[AIRLOCK] 🚨 SECURITY ALERT: 'Confidential' typed! (Detected via Python)")
+        keystroke_buffer = [] # Reset buffer
 
 # --- 4. MAIN APP ---
 if __name__ == "__main__":
-    # 1. Start Background Server
-    t = threading.Thread(target=start_server, daemon=True)
-    t.start()
+    # 1. Start Keyboard Listener (Non-blocking)
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
 
-    # 2. Start Window (Loading the URL, not raw HTML)
-    window = webview.create_window(
-        title="Airlock Secure Workspace",
-        url="http://127.0.0.1:5000", # <--- Safe URL load
-        width=1200, 
-        height=800
-    )
+    # 2. Launch in App Mode (Chrome/Chromium)
+    url = "http://127.0.0.1:5000"
+    print("[AIRLOCK] Launching in App Mode...")
     
-    # 3. Attach Event
-    window.events.loaded += on_page_loaded
+    # Find a browser that supports --app (Chrome/Chromium based)
+    browser_cmd = None
+    chromium_browsers = ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "brave-browser", "microsoft-edge", "microsoft-edge-stable"]
+    for browser in chromium_browsers:
+        if shutil.which(browser):
+            browser_cmd = browser
+            break
+            
+    if browser_cmd:
+        subprocess.Popen([browser_cmd, f"--app={url}"])
+    elif shutil.which("firefox"):
+        # Firefox doesn't support --app, but --new-window separates it
+        subprocess.Popen(["firefox", "--new-window", url])
+    else:
+        # Fallback if no suitable browser found
+        webbrowser.open(url)
     
-    # 4. Launch
-    webview.start(debug=True)
+    # 3. Run Server (Blocking)
+    start_server()
