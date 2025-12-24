@@ -1,134 +1,115 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDockWidget, QWidget, QVBoxLayout, QPushButton, QButtonGroup
-from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage, QWebEngineScript
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtCore import QUrl, QObject, pyqtSlot, QFile, QIODevice, Qt
+import threading
+import webview # pip install pywebview
+from flask import Flask, jsonify, request # pip install flask
+
+# --- 0. LINUX CLEANUP ---
+if sys.platform.startswith("linux"):
+    if "LD_LIBRARY_PATH" in os.environ: del os.environ["LD_LIBRARY_PATH"]
+    if "GTK_PATH" in os.environ: del os.environ["GTK_PATH"]
+    os.environ["GDK_BACKEND"] = "x11"
+
+# --- 1. THE INTERNAL SERVER (Backend) ---
+server = Flask(__name__)
 
 
-# --- THE BRIDGE (Python <-> JS) ---
-class SecurityBridge(QObject):
-    @pyqtSlot(str)
-    def check_text(self, text):
-        """Called from JS when user hits Enter"""
-        # This PRINT statement is what you should see in your terminal
-        print(f"\n[PYTHON] 🔒 Intercepted Message: {text}")
+# A. serve the Launcher HTML securely
+@server.route('/')
+def home():
+    return """
+    <!DOCTYPE html>
+    <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5;">
+        <h1>Airlock Secure Workspace</h1>
+        <p>Select your secure environment:</p>
+        <a href="https://gemini.google.com" 
+           style="display:inline-block; padding:15px 30px; margin:10px; background:#4285F4; color:white; border-radius:6px; font-size:16px; text-decoration:none;">
+            Launch Google Gemini
+        </a>
+        <a href="https://chatgpt.com" 
+           style="display:inline-block; padding:15px 30px; margin:10px; background:#10a37f; color:white; border-radius:6px; font-size:16px; text-decoration:none;">
+            Launch OpenAI ChatGPT
+        </a>
+    </body>
+    """
+
+# B. Handle Security Checks (The "Bridge")
+@server.route('/scan', methods=['POST'])
+def scan_text():
+    data = request.json
+    text = data.get('text', '')
+    print(f"[AIRLOCK] 🕵️ Scanning: {text[:30]}...")
+    
+    if "sk-" in text:
+        return jsonify({"status": "blocked", "reason": "API Key detected"})
+    elif "confidential" in text.lower():
+        return jsonify({"status": "blocked", "reason": "Confidential marker"})
+    
+    return jsonify({"status": "safe"})
+
+def start_server():
+    # Run quietly in background
+    server.run(port=5000, use_reloader=False)
+
+# --- 2. THE GUARD SCRIPT (Frontend) ---
+GUARD_JS = """
+console.log("🛡️ Airlock Active");
+
+// Inject "Back to Home" Button
+var homeBtn = document.createElement("button");
+homeBtn.innerHTML = "🏠 Home";
+homeBtn.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:2147483647; padding:10px 20px; background:#333; color:white; border:none; border-radius:5px; cursor:pointer; font-family:sans-serif; font-size:14px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);";
+homeBtn.onclick = function() { window.location.href = 'http://127.0.0.1:5000'; };
+document.body.appendChild(homeBtn);
+
+document.addEventListener('keydown', function(e) {
+    let target = e.target;
+    // Detect typing in input fields
+    if ((target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) && e.key === 'Enter' && !e.shiftKey) {
+        let text = target.value || target.innerText;
         
-        # --- PII DETECTION LOGIC ---
-        # Simple example: Block if it contains "sk-" (API Key format)
-        if "sk-" in text:
-            print("[PYTHON] ❌ BLOCKING: API Key detected!")
-            # In a real app, you would signal JS to stop the submit here
-        else:
-            print("[PYTHON] ✅ SAFE: content looks okay.")
+        // Send HTTP Request to our local Flask server
+        fetch('http://127.0.0.1:5000/scan', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'blocked') {
+                e.preventDefault();
+                e.stopPropagation();
+                alert("🛑 BLOCKED BY AIRLOCK:\\n" + data.reason);
+            }
+        });
+    }
+}, true);
+"""
 
-# --- THE BROWSER WINDOW ---
-class AirlockApp(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Airlock AI Wrapper")
-        self.resize(1200, 800)
-        
-        self.sidebar_dock = QDockWidget("Select your AI", self)
-        self.sidebar_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
-        self.sidebar_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+# --- 3. EVENT LISTENER ---
+def on_page_loaded(window):
+    # Only inject security when we are NOT on the launcher
+    url = window.get_current_url()
+    if "127.0.0.1" not in url:
+        # We are on Google/ChatGPT -> Inject Guard
+        window.evaluate_js(GUARD_JS)
 
-        # Create a widget to hold the content of the sidebar
-        sidebar_content_widget = QWidget()
-        sidebar_layout = QVBoxLayout(sidebar_content_widget)
-        self.groupOfButtons = QButtonGroup()
-        self.GeminiButton = QPushButton("Gemini")
-        self.GeminiButton.setCheckable(True) 
-        self.GeminiButton.setChecked(False)
-        self.groupOfButtons.addButton(self.GeminiButton)
-        sidebar_layout.addWidget(self.GeminiButton)
-
-        self.ChatGPTButton = QPushButton("ChatGPT")
-        self.ChatGPTButton.setCheckable(True) 
-        self.ChatGPTButton.setChecked(False)
-        self.groupOfButtons.addButton(self.ChatGPTButton)
-        sidebar_layout.addWidget(self.ChatGPTButton)
-
-        # Connect buttons to the handler
-        self.GeminiButton.clicked.connect(self.handle_button_click)
-        self.ChatGPTButton.clicked.connect(self.handle_button_click)
-
-        sidebar_layout.addStretch() # Adds flexible space to push content to the top
-
-
-        # Set the content widget to the QDockWidget
-        self.sidebar_dock.setWidget(sidebar_content_widget)
-
-        # Add the QDockWidget to the left dock area of the QMainWindow
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.sidebar_dock)
-
-        # 1. SETUP PERSISTENT PROFILE (Keeps you logged in)
-        # Creates a folder 'airlock_cache' next to this script
-        base_path = os.path.dirname(os.path.abspath(__file__))
-        storage_path = os.path.join(base_path, "airlock_cache")
-        
-        self.profile = QWebEngineProfile("AirlockProfile")
-        self.profile.setPersistentStoragePath(storage_path)
-        self.profile.setPersistentCookiesPolicy(QWebEngineProfile.PersistentCookiesPolicy.ForcePersistentCookies)
-        
-        # Spoof Chrome to avoid being blocked
-        # We use a Linux User-Agent to match your actual OS. This prevents "Platform Mismatch" detection.
-        self.profile.setHttpUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36")
-
-        # 2. SETUP BROWSER
-        self.browser = QWebEngineView()
-        self.page = QWebEnginePage(self.profile, self.browser)
-        self.browser.setPage(self.page)
-        self.setCentralWidget(self.browser)
-
-        # 3. SETUP BRIDGE
-        self.channel = QWebChannel()
-        self.bridge = SecurityBridge()
-        self.channel.registerObject("airlock", self.bridge)
-        self.page.setWebChannel(self.channel)
-
-        # 4. INJECT SCRIPTS
-        self.browser.loadFinished.connect(self.inject_security_layer)
-
-        # TODO: Add in option to select chatgpt or Gemini 
-
-    def handle_button_click(self):
-        if self.ChatGPTButton.isChecked():
-            self.browser.setUrl(QUrl("https://chatgpt.com"))
-        elif self.GeminiButton.isChecked():
-            self.browser.setUrl(QUrl("https://gemini.google.com"))
-        
-        # 5. LOAD URL
-        #print("[PYTHON] Loading ChatGPT...")  
-        #self.browser.setUrl(QUrl("https://chatgpt.com"))
-
-    def inject_security_layer(self):
-        print("[PYTHON] Page Loaded. Injecting Security Scripts...")
-
-        # A. Inject QWebChannel (The communication library)
-        # Note: We use the internal Qt resource if available
-        qt_js = QFile(":/qtwebchannel/qwebchannel.js")
-        if qt_js.open(QIODevice.OpenModeFlag.ReadOnly):
-            self.page.runJavaScript(str(qt_js.readAll(), 'utf-8'))
-        else:
-            print("[PYTHON] ⚠️ Warning: Internal QWebChannel resource not found.")
-
-        # B. Inject YOUR Guard Script
-        guard_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "guard.js")
-        if os.path.exists(guard_path):
-            with open(guard_path, "r", encoding='utf-8') as f:
-                js_code = f.read()
-                self.page.runJavaScript(js_code)
-                print("[PYTHON] 💉 guard.js injected successfully.")
-        else:
-            print(f"[PYTHON] ❌ Error: guard.js not found at {guard_path}")
-
+# --- 4. MAIN APP ---
 if __name__ == "__main__":
-    # Set Chromium flags to hide automation status and avoid detection
-    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-blink-features=AutomationControlled"
+    # 1. Start Background Server
+    t = threading.Thread(target=start_server, daemon=True)
+    t.start()
 
-    app = QApplication(sys.argv)
-    window = AirlockApp()
-    window.show()
-    sys.exit(app.exec())
+    # 2. Start Window (Loading the URL, not raw HTML)
+    window = webview.create_window(
+        title="Airlock Secure Workspace",
+        url="http://127.0.0.1:5000", # <--- Safe URL load
+        width=1200, 
+        height=800
+    )
+    
+    # 3. Attach Event
+    window.events.loaded += on_page_loaded
+    
+    # 4. Launch
+    webview.start(debug=True)
