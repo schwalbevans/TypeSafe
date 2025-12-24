@@ -1,2 +1,2 @@
 requests
-PyQt6-WebEngine
+pywebview
