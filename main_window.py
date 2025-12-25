@@ -16,9 +16,20 @@ global_window = None
 
 # A. serve the Launcher HTML securely
 @server.route('/')
-def allthetime():
+def home():
     return """
-    
+    <!DOCTYPE html>
+    <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background: #f0f2f5;">
+        <h1>Airlock Secure Workspace</h1>
+        <p>Welcome to Airlock, please select an AI to begin.</p>
+            <br><br>
+            <button onclick="window.location.href='https://gemini.google.com'" style="padding:15px 30px; background:#4285F4; color:white; border:none; border-radius:6px; cursor:pointer;">
+                Launch Gemini
+            </button>
+            <button onclick="window.location.href='https://chatgpt.com'" style="padding:15px 30px; background:#10a37f; color:white; border:none; border-radius:6px; cursor:pointer;">
+                Launch ChatGPT
+            </button>
+    </body>
     """
 
 def start_server():
