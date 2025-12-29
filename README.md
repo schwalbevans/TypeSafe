@@ -1,0 +1,1 @@
+This Project is to stop sensitive data at an OS level, from being entered into any AI Products, this includes desktop apps as well as websites. It runs simply as an exe, and requires no kernel level hooks to work. 
