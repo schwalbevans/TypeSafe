@@ -3,7 +3,8 @@ import asyncio
 from pywinauto import Application
 from removePIICheck import checkForPii
 
-
+#TODO: Clean this up so a user can come and go from text edit area as they please, as well as 
+# Don't have it make typing super difficult
 class checkForFiles: 
     def isUserinAI():
         textData = '' 
@@ -17,10 +18,9 @@ class checkForFiles:
                         if "ql-editor textarea" in ctrl.class_name():
                             textData = ctrl.window_text()
                             foundPII = checkForPii().analyze_text_for_pii(textData)
-                            print(foundPII)
-                    exit() 
-                            #If user presses enter, check text before sending?
-                            # or just while the user is typing if any data looks like pii! 
+                            ctrl.set_edit_text(foundPII)
+                     
+                            
                             
                                 
                             
