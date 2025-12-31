@@ -1,9 +1,12 @@
 import win32gui 
 import asyncio
 from pywinauto import Application
+from removePIICheck import checkForPii
+
 
 class checkForFiles: 
-    def isUserinAI(): 
+    def isUserinAI():
+        textData = '' 
         while(True):
             whatisit = win32gui.GetForegroundWindow()
             if "Google Gemini" in win32gui.GetWindowText(whatisit): 
@@ -12,12 +15,16 @@ class checkForFiles:
                     dlg = app.window(title_re=".*Gemini.*")
                     for ctrl in dlg.descendants():   
                         if "ql-editor textarea" in ctrl.class_name():
-                            print(f"Type: {ctrl.class_name()} | Title: '{ctrl.window_text()}'")
-                         #   try:
-                         #       print(f"User Input: {ctrl.get_value()}")
-                         #   except Exception:
-                         #       print(f"User Input: {ctrl.window_text()}")
-                    exit()
+                            textData = ctrl.window_text()
+                            foundPII = checkForPii().analyze_text_for_pii(textData)
+                            print(foundPII)
+                    exit() 
+                            #If user presses enter, check text before sending?
+                            # or just while the user is typing if any data looks like pii! 
+                            
+                                
+                            
+                        
 if __name__ == "__main__": 
     checkForFiles.isUserinAI() 
     

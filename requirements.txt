@@ -2,3 +2,7 @@ requests
 pywebview
 flask
 pyperclip
+pywinauto 
+win32gui 
+presidio_ananlyzer 
+presidio_anonymizer 
