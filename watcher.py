@@ -1,5 +1,6 @@
 import win32gui 
 import asyncio
+import time
 from pywinauto import Application
 from removePIICheck import checkForPii
 
@@ -7,8 +8,10 @@ from removePIICheck import checkForPii
 # Don't have it make typing super difficult
 class checkForFiles: 
     def isUserinAI():
+        pii_checker = checkForPii()
         textData = '' 
         while(True):
+            time.sleep(1)
             whatisit = win32gui.GetForegroundWindow()
             if "Google Gemini" in win32gui.GetWindowText(whatisit): 
                     geminiTitle = win32gui.GetWindowText(whatisit)
@@ -17,9 +20,10 @@ class checkForFiles:
                     for ctrl in dlg.descendants():   
                         if "ql-editor textarea" in ctrl.class_name():
                             textData = ctrl.window_text()
-                            foundPII = checkForPii().analyze_text_for_pii(textData)
+                            foundPII = pii_checker.analyze_text_for_pii(textData)
                             ctrl.set_edit_text(foundPII)
-                     
+                            
+                      
                             
                             
                                 
