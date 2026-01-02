@@ -10,7 +10,6 @@ class checkForPii:
 
     def analyze_text_for_pii(self, text):
         results = self.analyzer.analyze(text=text, language='en')
-        print(results)
         return results
     
     def anonymize_text_for_pii(self, text): 
