@@ -21,14 +21,11 @@ class checkForFiles:
                         if "ql-editor textarea" in ctrl.class_name():
                             textData = ctrl.window_text()
                             foundPII = pii_checker.analyze_text_for_pii(textData)
-                            ctrl.set_edit_text(foundPII)
+                            if foundPII:
+                                ctrl.draw_outline(colour='red')
                             
-                      
                             
-                            
-                                
-                            
-                        
+                                 
 if __name__ == "__main__": 
     checkForFiles.isUserinAI() 
     
