@@ -37,7 +37,7 @@ class checkForFiles:
                                          break
                                     whatisit = win32gui.GetForegroundWindow()
                                     if keyboard.is_pressed("enter"): 
-                                         ctypes.windll.user32.MessageBoxW(0, "Your text", "Your title", 1) #Opens a box but still doesnt block the message from being sent
+                                         ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to send this?", "Sensitive Info possibly sent", 1) #Opens a box but still doesnt block the message from being sent
                                          break
                             
                             
