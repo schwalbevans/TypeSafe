@@ -4,8 +4,7 @@ import time
 from pywinauto import Application
 from removePIICheck import checkForPii
 import keyboard 
-
-import ctypes  # An included library with Python install.   
+import ctypes  
 
 
 #TODO: Clean this up so a user can come and go from text edit area as they please, as well as 
@@ -26,21 +25,29 @@ class checkForFiles:
                         if "ql-editor textarea" in ctrl.class_name():
                             textData = ctrl.window_text()
                             foundPII = pii_checker.analyze_text_for_pii(textData)
+                            hook = None 
                             if foundPII: 
                                  ctrl.draw_outline(colour='red')
+                                 def on_enter(e):
+                                    print('enter pressed')
+                                 hook = keyboard.on_press_key('enter', lambda e: on_enter(e), suppress=True)
+                                 print("hook set")
                             while (foundPII and "Google Gemini" in win32gui.GetWindowText(whatisit)):
                                     #time.sleep(1)
                                     textData = ctrl.window_text()
                                     foundPII = pii_checker.analyze_text_for_pii(textData)
                                     if not foundPII: 
                                          ctrl.draw_outline(colour='green')
-                                         break
+                                         try: 
+                                              keyboard.unhook_key(hook)
+                                         except: 
+                                              pass 
+                                         hook = None 
                                     whatisit = win32gui.GetForegroundWindow()
-                                    if keyboard.is_pressed("enter"): 
-                                         ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to send this?", "Sensitive Info possibly sent", 1) #Opens a box but still doesnt block the message from being sent
-                                         break
                             
-                            
+                            if hook:
+                                try: keyboard.unhook(hook)
+                                except: pass
                                  
 if __name__ == "__main__": 
     checkForFiles.isUserinAI() 
