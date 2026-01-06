@@ -3,9 +3,11 @@ import asyncio
 import time
 from pywinauto import Application
 from removePIICheck import checkForPii
+import threading
 import keyboard 
 import ctypes  
-
+import tkinter as tk
+from tkinter import messagebox
 
 #TODO: Clean this up so a user can come and go from text edit area as they please, as well as 
 # Don't have it make typing super difficult
@@ -30,6 +32,14 @@ class checkForFiles:
                                  ctrl.draw_outline(colour='red')
                                  def on_enter(e):
                                     print('enter pressed')
+                                    def show_msg():
+                                        response = ctypes.windll.user32.MessageBoxW(0, "PII Detected! Send anyway?", "DLP Warning", 0x04 | 0x30 | 0x1000)
+                                        if response == 6: # User clicked Yes
+                                            try: keyboard.unhook_key(hook)
+                                            except: pass
+                                            keyboard.send('enter')
+                                    
+                                    threading.Thread(target=show_msg).start()
                                  hook = keyboard.on_press_key('enter', lambda e: on_enter(e), suppress=True)
                                  print("hook set")
                             while (foundPII and "Google Gemini" in win32gui.GetWindowText(whatisit)):
