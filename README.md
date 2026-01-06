@@ -45,7 +45,7 @@
   
   Bash
   
-  python main.py
+  python watcher.py
   
 🛠️ Usage
   Run the script. You will see [RedactOS] Privacy Filter Active in your console.
