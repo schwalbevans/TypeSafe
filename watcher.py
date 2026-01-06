@@ -5,11 +5,41 @@ from removePIICheck import checkForPii
 import threading
 import keyboard 
 import ctypes  
+import tkinter as tk
+import win32con
+
+class Overlay:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.overrideredirect(True)
+        self.root.attributes('-topmost', True)
+        self.root.config(bg='fuchsia')
+        self.frame = tk.Frame(self.root, bg='fuchsia', highlightthickness=3)
+        self.frame.pack(fill=tk.BOTH, expand=True)
+        self.root.withdraw()
+
+    def show(self, rect, color):
+        self.frame.config(highlightbackground=color)
+        w = rect.right - rect.left
+        h = rect.bottom - rect.top
+        self.root.geometry(f"{w}x{h}+{rect.left}+{rect.top}")
+        self.root.deiconify()
+        self.root.update()
+        
+        hwnd = self.root.winfo_id()
+        style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
+        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, style | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT)
+        win32gui.SetLayeredWindowAttributes(hwnd, 0x00FF00FF, 0, win32con.LWA_COLORKEY)
+
+    def hide(self):
+        self.root.withdraw()
+        self.root.update()
 
 class checkForFiles: 
     def __init__(self):
         self.pii_checker = checkForPii()
         self.hook = None
+        self.overlay = Overlay()
 
     def _show_msg(self):
         """Shows the blocking message box in a separate thread."""
@@ -63,17 +93,20 @@ class checkForFiles:
                             found_pii = self.pii_checker.analyze_text_for_pii(text_data)
 
                             if found_pii: 
-                                editor.draw_outline(colour='red')
+                                self.overlay.show(editor.rectangle(), 'red')
                                 self._set_hook()
                             else:
                                 if self.hook:
-                                    editor.draw_outline(colour='green')
+                                    self.overlay.show(editor.rectangle(), 'green')
                                     self._remove_hook()
+                                else:
+                                    self.overlay.hide()
                             
                             time.sleep(0.5) # Reduce CPU usage
                     
                     # Cleanup if we leave the window
                     self._remove_hook()
+                    self.overlay.hide()
                 
                 else:
                     time.sleep(1)
@@ -81,6 +114,7 @@ class checkForFiles:
             except Exception as e:
                 # print(f"Error: {e}")
                 self._remove_hook()
+                self.overlay.hide()
                 time.sleep(1)
                                  
 if __name__ == "__main__": 
