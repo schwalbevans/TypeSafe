@@ -1,8 +1,8 @@
-requests
-pywebview
-flask
-pyperclip
-pywinauto 
 win32gui 
-presidio_ananlyzer 
+time
+pywinauto 
+threading
+keyboard 
+ctypes 
+presidio_analyzer
 presidio_anonymizer 

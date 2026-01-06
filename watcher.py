@@ -1,64 +1,88 @@
 import win32gui 
-import asyncio
 import time
 from pywinauto import Application
 from removePIICheck import checkForPii
 import threading
 import keyboard 
 import ctypes  
-import tkinter as tk
-from tkinter import messagebox
 
-#TODO: Clean this up so a user can come and go from text edit area as they please, as well as 
-# Don't have it make typing super difficult
 class checkForFiles: 
-    def isUserinAI():
-        pii_checker = checkForPii()
-        textData = '' 
-        piiIsPresent = False 
-        while(True):
-            time.sleep(1)
-            whatisit = win32gui.GetForegroundWindow()
-            if "Google Gemini" in win32gui.GetWindowText(whatisit): 
-                    geminiTitle = win32gui.GetWindowText(whatisit)
+    def __init__(self):
+        self.pii_checker = checkForPii()
+        self.hook = None
+
+    def _show_msg(self):
+        """Shows the blocking message box in a separate thread."""
+        response = ctypes.windll.user32.MessageBoxW(0, "PII Detected! Send anyway?", "DLP Warning", 0x04 | 0x30 | 0x1000)
+        if response == 6: # User clicked Yes
+            self._remove_hook()
+            keyboard.send('enter')
+
+    def _on_enter(self, e):
+        """Callback for the keyboard hook."""
+        print('enter pressed')
+        threading.Thread(target=self._show_msg).start()
+
+    def _remove_hook(self):
+        """Safely removes the keyboard hook."""
+        if self.hook:
+            try:
+                keyboard.unhook_key(self.hook)
+            except (ValueError, KeyError):
+                pass
+            self.hook = None
+            print("hook removed")
+
+    def _set_hook(self):
+        """Sets the keyboard hook if not already set."""
+        if self.hook is None:
+            self.hook = keyboard.on_press_key('enter', self._on_enter, suppress=True)
+            print("hook set")
+
+    def isUserinAI(self):
+        """Main monitoring loop."""
+        print("Watcher started...")
+        while True:
+            try:
+                foreground_window = win32gui.GetForegroundWindow()
+                window_title = win32gui.GetWindowText(foreground_window)
+
+                if "Google Gemini" in window_title:
                     app = Application(backend="uia").connect(title_re=".*Gemini.*")
                     dlg = app.window(title_re=".*Gemini.*")
+                    
+                    editor = None
                     for ctrl in dlg.descendants():   
                         if "ql-editor textarea" in ctrl.class_name():
-                            textData = ctrl.window_text()
-                            foundPII = pii_checker.analyze_text_for_pii(textData)
-                            hook = None 
-                            if foundPII: 
-                                 ctrl.draw_outline(colour='red')
-                                 def on_enter(e):
-                                    print('enter pressed')
-                                    def show_msg():
-                                        response = ctypes.windll.user32.MessageBoxW(0, "PII Detected! Send anyway?", "DLP Warning", 0x04 | 0x30 | 0x1000)
-                                        if response == 6: # User clicked Yes
-                                            try: keyboard.unhook_key(hook)
-                                            except: pass
-                                            keyboard.send('enter')
-                                    
-                                    threading.Thread(target=show_msg).start()
-                                 hook = keyboard.on_press_key('enter', lambda e: on_enter(e), suppress=True)
-                                 print("hook set")
-                            while (foundPII and "Google Gemini" in win32gui.GetWindowText(whatisit)):
-                                    #time.sleep(1)
-                                    textData = ctrl.window_text()
-                                    foundPII = pii_checker.analyze_text_for_pii(textData)
-                                    if not foundPII: 
-                                         ctrl.draw_outline(colour='green')
-                                         try: 
-                                              keyboard.unhook_key(hook)
-                                         except: 
-                                              pass 
-                                         hook = None 
-                                    whatisit = win32gui.GetForegroundWindow()
+                            editor = ctrl
+                            break
+                    
+                    if editor:
+                        while "Google Gemini" in win32gui.GetWindowText(win32gui.GetForegroundWindow()):
+                            text_data = editor.window_text()
+                            found_pii = self.pii_checker.analyze_text_for_pii(text_data)
+
+                            if found_pii: 
+                                editor.draw_outline(colour='red')
+                                self._set_hook()
+                            else:
+                                if self.hook:
+                                    editor.draw_outline(colour='green')
+                                    self._remove_hook()
                             
-                            if hook:
-                                try: keyboard.unhook(hook)
-                                except: pass
+                            time.sleep(0.5) # Reduce CPU usage
+                    
+                    # Cleanup if we leave the window
+                    self._remove_hook()
+                
+                else:
+                    time.sleep(1)
+
+            except Exception as e:
+                # print(f"Error: {e}")
+                self._remove_hook()
+                time.sleep(1)
                                  
 if __name__ == "__main__": 
-    checkForFiles.isUserinAI() 
-    
+    watcher = checkForFiles()
+    watcher.isUserinAI()
