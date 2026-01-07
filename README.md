@@ -5,6 +5,8 @@ RedactOS is an open-source security tool that prevents sensitive data (PII) from
 
 Unlike browser extensions, which are blind to desktop apps, RedactOS uses Windows Accessibility APIs to monitor text fields at the operating system level. It sits quietly in the background and only activates when you are typing into a known AI interface.
 
+![Alpha Example in Gemini](demoRedact.gif)
+
 ## ⚠️ ALPHA RELEASE WARNING
 **This software is currently in active development (v0.1.0).**
 
