@@ -1,8 +1,5 @@
-win32gui 
-time
-pywinauto 
-threading
-keyboard 
-ctypes 
-presidio_analyzer
-presidio_anonymizer 
+pywin32
+pywinauto
+keyboard
+presidio-analyzer
+presidio-anonymizer
