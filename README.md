@@ -83,7 +83,7 @@ We believe that security tools requires absolute transparency. You should always
 
 * **❌ Pull Requests:** We **do not** accept external code contributions or Pull Requests. Any PRs opened will be automatically closed to respect your time.
 * **✅ Bug Reports:** If you find a bug, crash, or false positive, please [Open an Issue](link_to_issues). Your testing is invaluable to us.
-* **✅ Security Audits:** If you find a security vulnerability, please report it via Issues (or email security@typesafe.ai).
+* **✅ Security Audits:** If you find a security vulnerability, please report it via Issues (or email evanschwalb@gmail.com).
 * **🍴 Forking:** Under the **AGPLv3** license, you are free to fork this repository for your own modifications, provided you adhere to the license terms.
 
 **Why this model?**
