@@ -35,7 +35,7 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
     ```bash
     pip install -r requirements.txt
     ```
-    *(Note: This installs uiautomation, pyqt6, and presidio-analyzer)*
+    *(Note: This installs uiautomation, win32gui, and presidio-analyzer)*
 
 3.  **Run the Guard:**
     ```bash
