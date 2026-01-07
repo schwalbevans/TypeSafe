@@ -1,9 +1,9 @@
-# 🛡️ RedactOS (Alpha)
+# 🛡️ TypeSafe (Alpha)
 **The OS-Level Privacy Guard for AI.**
 
-RedactOS is an open-source security tool that prevents sensitive data (PII) from leaking into AI models like Gemini, ChatGPT, and Claude.
+TypeSafe is an open-source security tool that prevents sensitive data (PII) from leaking into AI models like Gemini, ChatGPT, and Claude.
 
-Unlike browser extensions, which are blind to desktop apps, RedactOS uses Windows Accessibility APIs to monitor text fields at the operating system level. It sits quietly in the background and only activates when you are typing into a known AI interface.
+Unlike browser extensions, which are blind to desktop apps, TypeSafe uses Windows Accessibility APIs to monitor text fields at the operating system level. It sits quietly in the background and only activates when you are typing into a known AI interface.
 
 ![Alpha Example in Gemini](demoRedact.gif)
 
@@ -23,12 +23,12 @@ We are releasing this early to gather feedback from the security and developer c
 *   **Visual Guard:** Draws a transparent red overlay over the text box when secrets are detected.
 
 ## 🚀 Installation (for Developers)
-RedactOS is written in Python. To run the Alpha, you need Python 3.10+ installed.
+TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/RedactOS.git
-    cd RedactOS
+    git clone https://github.com/YOUR_USERNAME/TypeSafe.git
+    cd TypeSafe
     ```
 
 2.  **Install dependencies:**
@@ -43,12 +43,12 @@ RedactOS is written in Python. To run the Alpha, you need Python 3.10+ installed
     ```
 
 ## 🛠️ Usage
-1.  Run the script. You will see `[RedactOS] Privacy Filter Active` in your console.
+1.  Run the script. You will see `[TypeSafe] Privacy Filter Active` in your console.
 2.  Open Google Gemini (gemini.google.com) in your browser.
 3.  Type a test secret into the prompt, for example:
     > "My secret credit card is 4000 1234 5678 9010"
 4.  You should see a **Red Border** appear around the text box.
-5.  If you try to hit **ENTER**, RedactOS will block the input and warn you.
+5.  If you try to hit **ENTER**, TypeSafe will block the input and warn you.
 
 ## 🗺️ Roadmap
 - [x] v0.1: Basic Text Interception on Windows (Gemini Support).
@@ -57,21 +57,21 @@ RedactOS is written in Python. To run the Alpha, you need Python 3.10+ installed
 - [ ] v0.4: File Upload Interception (.pdf, .docx).
 
 ## 📄 License & Commercial Use
-RedactOS is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
+TypeSafe is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
 
 **What this means:**
 *   You are free to: Use, modify, and distribute this software.
 *   **The Catch:** If you modify this software and use it as part of a service (internal or external), you must release your source code changes to the public under the same license.
 
 ## 💼 Commercial License
-Do you want to use RedactOS in your company without open-sourcing your modifications? 
+Do you want to use TypeSafe in your company without open-sourcing your modifications? 
 
 We will offer a Commercial License that removes the AGPL restrictions and includes:
 *   Signed MSI Installers (Easy deployment).
 *   Centralized Admin Dashboard.
 *   Priority Support.
 
-Join the Waitlist for RedactOS Pro
+Join the Waitlist for TypeSafe Pro
 
 ## 🤝 Contributing
 We welcome Pull Requests! We are specifically looking for help with:
@@ -79,4 +79,4 @@ We welcome Pull Requests! We are specifically looking for help with:
 *   Reducing false positives in `input_guard.py`.
 *   Adding support for macOS (Accessibility API).
 
-**Disclaimer:** RedactOS is a security tool, not a guarantee. It is designed to catch accidental leaks, but no tool is 100% perfect. Always verify what you send to AI models.
+**Disclaimer:** TypeSafe is a security tool, not a guarantee. It is designed to catch accidental leaks, but no tool is 100% perfect. Always verify what you send to AI models.
