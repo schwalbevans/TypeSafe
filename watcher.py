@@ -23,13 +23,12 @@ class Overlay:
         w = rect.right - rect.left
         h = rect.bottom - rect.top
         self.root.geometry(f"{w}x{h}+{rect.left}+{rect.top}")
-        self.root.deiconify()
-        self.root.update()
-        
         hwnd = self.root.winfo_id()
         style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
-        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, style | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT)
+        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, style | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT)        
         win32gui.SetLayeredWindowAttributes(hwnd, 0x00FF00FF, 0, win32con.LWA_COLORKEY)
+        self.root.deiconify()
+        self.root.update()
 
     def hide(self):
         self.root.withdraw()
@@ -102,7 +101,7 @@ class checkForFiles:
                                 else:
                                     self.overlay.hide()
                             
-                            time.sleep(0.5) # Reduce CPU usage
+                            time.sleep(0.2) # Reduce CPU usage
                     
                     # Cleanup if we leave the window
                     self._remove_hook()
