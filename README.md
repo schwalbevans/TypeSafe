@@ -43,7 +43,7 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
     ```
 
 ## 🛠️ Usage
-1.  Run the script. You will see `[TypeSafe] Privacy Filter Active` in your console.
+1.  Run the script. You will see `watcher running....` in your console.
 2.  Open Google Gemini (gemini.google.com) in your browser.
 3.  Type a test secret into the prompt, for example:
     > "My secret credit card is 4000 1234 5678 9010"
@@ -52,9 +52,11 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
 
 ## 🗺️ Roadmap
 - [x] v0.1: Basic Text Interception on Windows (Gemini Support).
-- [ ] v0.2: Support for ChatGPT Desktop App, ChatGPT Web and Microsoft Copilot Desktop.
-- [ ] v0.3: "Sanitize & Send" Popup Menu.
+- [ ] v0.2: Sanitize and send popup menu
+- [ ] v0.3: Support for ChatGPT Desktop App, ChatGPT Web and Microsoft Copilot Desktop.
 - [ ] v0.4: File Upload Interception (.pdf, .docx).
+- [ ] v0.5: Mac compatibility
+- [ ] v1.0: exe release
 
 ## 📄 License & Commercial Use
 TypeSafe is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
@@ -74,9 +76,5 @@ We will offer a Commercial License that removes the AGPL restrictions and includ
 Join the Waitlist for TypeSafe Pro
 
 ## 🤝 Contributing
-We welcome Pull Requests! We are specifically looking for help with:
-*   Improving the Regex patterns in `engine.py`.
-*   Reducing false positives in `input_guard.py`.
-*   Adding support for macOS (Accessibility API).
 
 **Disclaimer:** TypeSafe is a security tool, not a guarantee. It is designed to catch accidental leaks, but no tool is 100% perfect. Always verify what you send to AI models.
