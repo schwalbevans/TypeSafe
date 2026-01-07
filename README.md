@@ -43,10 +43,10 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
     ```
 
 ## 🛠️ Usage
-1.  Run the script. You will see `watcher running....` in your console.
+1.  Run the script. You will see `Watcher Started....` in your console.
 2.  Open Google Gemini (gemini.google.com) in your browser.
 3.  Type a test secret into the prompt, for example:
-    > "My secret credit card is 4000 1234 5678 9010"
+    > "My secret credit card is 4000123456789010"
 4.  You should see a **Red Border** appear around the text box.
 5.  If you try to hit **ENTER**, TypeSafe will block the input and warn you.
 
