@@ -101,7 +101,7 @@ class checkForFiles:
                                 else:
                                     self.overlay.hide()
                             
-                            time.sleep(0.2) # Reduce CPU usage
+                            time.sleep(0.1) # Reduce CPU usage
                     
                     # Cleanup if we leave the window
                     self._remove_hook()
