@@ -73,7 +73,7 @@ We will offer a Commercial License that removes the AGPL restrictions and includ
 *   Centralized Admin Dashboard.
 *   Priority Support.
 
-Join the Waitlist for TypeSafe Pro
+Website coming soon for TypeSafe Pro Signup 
 
 ## 🤝 Development & Contribution Policy
 
