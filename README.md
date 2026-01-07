@@ -27,7 +27,7 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/TypeSafe.git
+    git clone https://github.com/schwalbevans/TypeSafe.git
     cd TypeSafe
     ```
 
