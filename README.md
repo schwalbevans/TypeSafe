@@ -75,6 +75,18 @@ We will offer a Commercial License that removes the AGPL restrictions and includ
 
 Join the Waitlist for TypeSafe Pro
 
-## 🤝 Contributing
+## 🤝 Development & Contribution Policy
+
+**TypeSafe is built on a "Source Available" model.**
+
+We believe that security tools requires absolute transparency. You should always be able to audit the code that monitors your inputs. However, to maintain strict **supply chain security** and code provenance, this repository operates as a **Broadcast-Only** codebase.
+
+* **❌ Pull Requests:** We **do not** accept external code contributions or Pull Requests. Any PRs opened will be automatically closed to respect your time.
+* **✅ Bug Reports:** If you find a bug, crash, or false positive, please [Open an Issue](link_to_issues). Your testing is invaluable to us.
+* **✅ Security Audits:** If you find a security vulnerability, please report it via Issues (or email security@typesafe.ai).
+* **🍴 Forking:** Under the **AGPLv3** license, you are free to fork this repository for your own modifications, provided you adhere to the license terms.
+
+**Why this model?**
+It ensures that every line of code in the official TypeSafe release is written, vetted, and signed by our core team, guaranteeing the integrity of the software you install.
 
 **Disclaimer:** TypeSafe is a security tool, not a guarantee. It is designed to catch accidental leaks, but no tool is 100% perfect. Always verify what you send to AI models.
