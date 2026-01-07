@@ -4,6 +4,10 @@
   RedactOS is an open-source security tool that prevents sensitive data (PII) from leaking into AI models like Gemini, ChatGPT, and Claude.
   
   Unlike browser extensions, which are blind to desktop apps, RedactOS uses Windows Accessibility APIs to monitor text fields at the operating system level. It sits quietly in the background and only activates when you are typing into a known AI interface.
+  
+  ![ScreenRecording2026-01-06181213-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/88e878fa-9b5b-4d00-946a-19f82cf8a969)
+
+
 
 ⚠️ ALPHA RELEASE WARNING
   This software is currently in active development (v0.1.0).
