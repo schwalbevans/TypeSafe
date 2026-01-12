@@ -39,11 +39,15 @@ class checkForFiles:
         self.pii_checker = checkForPii()
         self.hook = None
         self.overlay = Overlay()
+        self.editor = None 
 
     def _show_msg(self):
         """Shows the blocking message box in a separate thread."""
-        response = ctypes.windll.user32.MessageBoxW(0, "PII Detected! Send anyway?", "DLP Warning", 0x04 | 0x30 | 0x1000)
+        response = ctypes.windll.user32.MessageBoxW(0, "It appears there is PII in this prompt, would you like to scrub it and send?", "DLP Warning", 0x04 | 0x30 | 0x1000)
         if response == 6: # User clicked Yes
+            text_data = self.editor.window_text()
+            anonymized_text = self.pii_checker.anonymize_text_for_pii(text_data)
+            self.editor.set_edit_text(anonymized_text)
             self._remove_hook()
             keyboard.send('enter')
 
@@ -80,23 +84,23 @@ class checkForFiles:
                     app = Application(backend="uia").connect(title_re=".*Gemini.*")
                     dlg = app.window(title_re=".*Gemini.*")
                     
-                    editor = None
+                    self.editor = None
                     for ctrl in dlg.descendants():   
                         if "ql-editor textarea" in ctrl.class_name():
-                            editor = ctrl
+                            self.editor = ctrl
                             break
                     
-                    if editor:
+                    if self.editor:
                         while "Google Gemini" in win32gui.GetWindowText(win32gui.GetForegroundWindow()):
-                            text_data = editor.window_text()
+                            text_data = self.editor.window_text()
                             found_pii = self.pii_checker.analyze_text_for_pii(text_data)
 
                             if found_pii: 
-                                self.overlay.show(editor.rectangle(), 'red')
+                                self.overlay.show(self.editor.rectangle(), 'red')
                                 self._set_hook()
                             else:
                                 if self.hook:
-                                    self.overlay.show(editor.rectangle(), 'green')
+                                    self.overlay.show(self.editor.rectangle(), 'green')
                                     self._remove_hook()
                                 else:
                                     self.overlay.hide()

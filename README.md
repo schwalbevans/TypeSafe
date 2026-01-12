@@ -52,7 +52,7 @@ TypeSafe is written in Python. To run the Alpha, you need Python 3.10+ installed
 
 ## 🗺️ Roadmap
 - [x] v0.1: Basic Text Interception on Windows (Gemini Support).
-- [ ] v0.2: Sanitize and send popup menu
+- [ ] v0.2: Sanitize and send popup menu, as well as click, not just enter support
 - [ ] v0.3: Add configuration file 
 - [ ] v0.4: Support for ChatGPT Desktop App, ChatGPT Web and Microsoft Copilot Desktop.
 - [ ] v0.5: File Upload Interception (.pdf, .docx).
